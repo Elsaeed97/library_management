@@ -31,7 +31,7 @@ class User(AbstractUser):
     username = None  # type: ignore[assignment]
     role = CharField(
         max_length=20,
-        choices=UserRole.choices,
+        choices=UserRole,
         default=UserRole.MEMBER,
     )
 
