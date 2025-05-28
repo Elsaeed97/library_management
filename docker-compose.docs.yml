@@ -1,0 +1,16 @@
+services:
+  docs:
+    image: library_management_local_docs
+    container_name: library_management_local_docs
+    build:
+      context: .
+      dockerfile: ./compose/local/docs/Dockerfile
+    env_file:
+      - ./.envs/.local/.django
+    volumes:
+      - ./docs:/docs:z
+      - ./config:/app/config:z
+      - ./library_management:/app/library_management:z
+    ports:
+      - '9000:9000'
+    command: /start-docs
