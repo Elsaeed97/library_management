@@ -1,11 +1,9 @@
 # serializers.py
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 from library_management.libraries.models import Author
 from library_management.libraries.models import Book
-from library_management.libraries.models import BorrowingTransaction
 from library_management.libraries.models import Category
 from library_management.libraries.models import Library
 

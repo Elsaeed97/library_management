@@ -56,10 +56,12 @@ class BookFilter(django_filters.FilterSet):
 
 class LoadedAuthorFilter(django_filters.FilterSet):
     category = django_filters.CharFilter(
-        field_name="authored_books__category__name", lookup_expr="iexact"
+        field_name="authored_books__category__name",
+        lookup_expr="iexact",
     )
     library = django_filters.CharFilter(
-        field_name="authored_books__library__name", lookup_expr="iexact"
+        field_name="authored_books__library__name",
+        lookup_expr="iexact",
     )
 
     class Meta:

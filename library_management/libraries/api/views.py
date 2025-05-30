@@ -122,6 +122,7 @@ class LoadedAuthorViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Author.objects.prefetch_related(
             Prefetch(
-                "authored_books", queryset=Book.objects.select_related("category"),
+                "authored_books",
+                queryset=Book.objects.select_related("category"),
             ),
         )
