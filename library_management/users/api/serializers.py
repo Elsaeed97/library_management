@@ -7,8 +7,9 @@ from django.utils.http import urlsafe_base64_decode
 from django.utils.http import urlsafe_base64_encode
 from rest_framework import serializers
 
-from library_management.users.models import User
 from library_management.users.tasks import send_password_reset_email
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer[User]):
@@ -21,7 +22,25 @@ class UserSerializer(serializers.ModelSerializer[User]):
         }
 
 
-User = get_user_model()
+class UserRegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    class Meta:
+        model = User
+        fields = ["email", "name", "password"]
+
+    def create(self, validated_data):
+        return User.objects.create_user(
+            email=validated_data["email"],
+            name=validated_data.get("name", ""),
+            password=validated_data["password"],
+        )
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            msg = "A user with this email already exists."
+            raise serializers.ValidationError(msg)
+        return value
 
 
 class PasswordResetSerializer(serializers.Serializer):

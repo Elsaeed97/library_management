@@ -1,5 +1,6 @@
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.generics import CreateAPIView
 from rest_framework.mixins import ListModelMixin
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.mixins import UpdateModelMixin
@@ -14,6 +15,7 @@ from library_management.users.models import User
 from .serializers import PasswordResetConfirmSerializer
 from .serializers import PasswordResetConfirmValidatorSerializer
 from .serializers import PasswordResetSerializer
+from .serializers import UserRegisterSerializer
 from .serializers import UserSerializer
 
 
@@ -30,6 +32,11 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
     def me(self, request):
         serializer = UserSerializer(request.user, context={"request": request})
         return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
+class RegisterView(CreateAPIView):
+    serializer_class = UserRegisterSerializer
+    queryset = User.objects.all()
 
 
 class PasswordResetView(APIView):
@@ -53,6 +60,17 @@ class PasswordResetConfirmValidateView(APIView):
         return Response({"detail": "Token is valid."}, status=status.HTTP_200_OK)
 
 
+class PasswordResetConfirmView(APIView):
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"detail": "Password has been reset successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -64,14 +82,3 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-class PasswordResetConfirmView(APIView):
-    def post(self, request):
-        serializer = PasswordResetConfirmSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(
-            {"detail": "Password has been reset successfully."},
-            status=status.HTTP_200_OK,
-        )
