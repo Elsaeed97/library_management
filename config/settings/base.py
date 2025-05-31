@@ -7,6 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # library_management/
@@ -308,7 +309,14 @@ CELERY_WORKER_SEND_TASK_EVENTS = True
 CELERY_TASK_SEND_SENT_EVENT = True
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#worker-hijack-root-logger
 CELERY_WORKER_HIJACK_ROOT_LOGGER = False
-
+# Celery Beat
+# ------------------------------------------------------------------------------
+CELERY_BEAT_SCHEDULE = {
+    "send-reminder-emails-every-morning": {
+        "task": "library_management.libraries.tasks.send_due_soon_reminders",
+        "schedule": crontab(hour=8, minute=0),  # Every day at 8:00 AM
+    },
+}
 # django-rest-framework
 # -------------------------------------------------------------------------------
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/

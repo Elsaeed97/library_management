@@ -1,0 +1,11 @@
+Hi!
+
+You have successfully borrowed the following books:
+
+{% for book in books %}
+- {{ book }}
+{% endfor %}
+
+Please return them by {{ expected_return_date }}.
+
+Happy reading!

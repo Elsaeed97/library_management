@@ -7,10 +7,15 @@ from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import Value
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import permissions
+from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from library_management.libraries.models import Author
 from library_management.libraries.models import Book
+from library_management.libraries.models import BorrowingTransaction
 from library_management.libraries.models import Library
 
 from .filters import AuthorFilter
@@ -19,6 +24,8 @@ from .filters import LibraryFilter
 from .filters import LoadedAuthorFilter
 from .serializers import AuthorSerializer
 from .serializers import BookSerializer
+from .serializers import BorrowingTransactionCreateSerializer
+from .serializers import BorrowingTransactionReturnSerializer
 from .serializers import LibrarySerializer
 from .serializers import LoadedAuthorSerializer
 
@@ -126,3 +133,27 @@ class LoadedAuthorViewSet(viewsets.ReadOnlyModelViewSet):
                 queryset=Book.objects.select_related("category"),
             ),
         )
+
+
+class BorrowingTransactionViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = BorrowingTransaction.objects.all()
+    serializer_class = BorrowingTransactionCreateSerializer
+
+    def get_queryset(self):
+        return BorrowingTransaction.objects.filter(user=self.request.user)
+
+    @action(detail=True, methods=["post"], url_path="return")
+    def return_books(self, request, pk=None):
+        transaction = self.get_object()
+
+        serializer = BorrowingTransactionReturnSerializer(
+            transaction,
+            data={},
+            context={"request": request},
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

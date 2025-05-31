@@ -1,0 +1,11 @@
+Hi!
+
+Just a reminder that you have books due to be returned on {{ expected_return_date }}:
+
+{% for book in books %}
+- {{ book }}
+{% endfor %}
+
+Please make sure to return them on time to avoid penalties.
+
+Thank you!
