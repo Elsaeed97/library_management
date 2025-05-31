@@ -49,6 +49,7 @@ def handle_return_process(sender, instance, **kwargs):
             if old_instance.status != "returned" and instance.status == "returned":
                 if not instance.actual_return_date:
                     instance.actual_return_date = timezone.now()
+
                 for book in instance.books.all():
                     book.return_copy()
         except BorrowingTransaction.DoesNotExist:

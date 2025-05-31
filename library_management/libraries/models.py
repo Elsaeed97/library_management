@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
@@ -102,16 +104,25 @@ class Book(models.Model):
         return False
 
     def return_copy(self):
-        """Increase available copies when returned"""
-        if self.available_copies >= self.total_copies:
-            msg = f"Cannot return '{self.title}'. All copies are already returned."
-            raise ValidationError(
-                msg,
-            )
+        """Increase available copies when returned.
+        Also notify if book was previously unavailable.
+        """
+        if self.available_copies < self.total_copies:
+            was_unavailable = self.available_copies == 0
+            self.available_copies += 1
+            self.save()
 
-        self.available_copies += 1
-        self.save()
-        return True
+            if was_unavailable:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "book_availability",
+                    {
+                        "type": "book_available",
+                        "message": f"'{self.title}' is now available!",
+                    },
+                )
+            return True
+        return False
 
 
 class BorrowingTransaction(models.Model):
