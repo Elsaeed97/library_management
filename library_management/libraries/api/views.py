@@ -6,8 +6,9 @@ from django.db.models import Func
 from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import Value
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -17,17 +18,20 @@ from library_management.libraries.models import Author
 from library_management.libraries.models import Book
 from library_management.libraries.models import BorrowingTransaction
 from library_management.libraries.models import Library
+from library_management.users.api.permissions import IsMember
 
 from .filters import AuthorFilter
 from .filters import BookFilter
 from .filters import LibraryFilter
 from .filters import LoadedAuthorFilter
+from .pagination import CustomPagination
 from .serializers import AuthorSerializer
 from .serializers import BookSerializer
 from .serializers import BorrowingTransactionCreateSerializer
 from .serializers import BorrowingTransactionReturnSerializer
 from .serializers import LibrarySerializer
 from .serializers import LoadedAuthorSerializer
+from .throttles import BorrowRateThrottle
 
 
 class Radians(Func):
@@ -50,6 +54,7 @@ class ACos(Func):
     arity = 1
 
 
+@method_decorator(cache_page(60 * 60), name="list")
 class LibraryViewSet(viewsets.ModelViewSet):
     serializer_class = LibrarySerializer
     filter_backends = [DjangoFilterBackend]
@@ -85,6 +90,7 @@ class LibraryViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+@method_decorator(cache_page(60 * 60), name="list")
 class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = AuthorSerializer
     filter_backends = [DjangoFilterBackend]
@@ -106,6 +112,7 @@ class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
 
+@method_decorator(cache_page(60 * 60), name="list")
 class BookViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BookSerializer
     filter_backends = [DjangoFilterBackend]
@@ -120,10 +127,12 @@ class BookViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
 
+@method_decorator(cache_page(60 * 60), name="list")
 class LoadedAuthorViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = LoadedAuthorSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = LoadedAuthorFilter
+    pagination_class = CustomPagination
     http_method_names = ["get"]
 
     def get_queryset(self):
@@ -136,9 +145,10 @@ class LoadedAuthorViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class BorrowingTransactionViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsMember]
     queryset = BorrowingTransaction.objects.all()
     serializer_class = BorrowingTransactionCreateSerializer
+    throttle_classes = [BorrowRateThrottle]
 
     def get_queryset(self):
         return BorrowingTransaction.objects.filter(user=self.request.user)
