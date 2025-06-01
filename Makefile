@@ -43,7 +43,7 @@ logs:
 	docker compose -f $(COMPOSE_FILE) logs -f $(filter-out $@,$(MAKECMDGOALS))
 
 test:
-	docker compose -f $(COMPOSE_FILE) run --rm $(SERVICE) python manage.py test $(filter-out $@,$(MAKECMDGOALS))
+	docker compose -f $(COMPOSE_FILE) run --rm $(SERVICE) pytest
 
 test_local:
 	docker compose -f $(COMPOSE_FILE) exec $(SERVICE) python manage.py test --settings=config.settings.test $(filter-out $@,$(MAKECMDGOALS))
