@@ -88,7 +88,7 @@ def test_author_filter_by_category(api_client, sample_data):
 def test_book_list(api_client, sample_data):
     res = api_client.get("/api/books/")
     assert res.status_code == HTTP_200_OK
-    assert res.data["results"][0]["title"] == "Foundation"
+    assert res.data["results"][0]["title"] == "Django Foundation"
 
 
 #  LOADED AUTHOR TEST
