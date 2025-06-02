@@ -23,7 +23,9 @@ def api_client():
 @pytest.fixture
 def member_user(db):
     return User.objects.create_user(
-        email="member@test.com", password="testpassword", role="member",  # noqa: S106
+        email="member@test.com",
+        password="testpassword",  # noqa: S106
+        role="member",
     )
 
 
@@ -36,12 +38,15 @@ def auth_client(api_client, member_user):
 @pytest.fixture
 def sample_data(member_user):
     library = Library.objects.create(
-        name="Main Branch", address="123 St", latitude=30.0, longitude=31.0,
+        name="Cairo Library",
+        address="Cairo",
+        latitude=30.0,
+        longitude=31.0,
     )
-    category = Category.objects.create(name="Sci-Fi")
-    author = Author.objects.create(first_name="Isaac", last_name="Asimov")
+    category = Category.objects.create(name="Test")
+    author = Author.objects.create(first_name="Elsaeed", last_name="Ahmed")
     book = Book.objects.create(
-        title="Foundation",
+        title="Django Foundation",
         isbn="1234567890123",
         category=category,
         library=library,

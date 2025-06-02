@@ -24,8 +24,8 @@ def user(db):
 @pytest.fixture
 def library(db):
     return Library.objects.create(
-        name="Main Library",
-        address="123 Main St",
+        name="ALexandria Library",
+        address="ALex, Egypt",
         latitude=30.000,
         longitude=31.000,
     )
@@ -33,18 +33,18 @@ def library(db):
 
 @pytest.fixture
 def category(db):
-    return Category.objects.create(name="Fiction")
+    return Category.objects.create(name="Programming")
 
 
 @pytest.fixture
 def author(db):
-    return Author.objects.create(first_name="George", last_name="Orwell")
+    return Author.objects.create(first_name="Elsaeed", last_name="Ahmed")
 
 
 @pytest.fixture
 def book(library, category, author):
     book = Book.objects.create(
-        title="1984",
+        title="Introduction to Algorithms",
         isbn="1234567890123",
         category=category,
         library=library,
@@ -57,7 +57,7 @@ def book(library, category, author):
 
 
 def test_book_str_and_availability(book):
-    assert str(book) == "1984"
+    assert str(book) == "Introduction to Algorithms"
     assert book.is_available is True
 
 
@@ -86,7 +86,7 @@ def test_book_invalid_available_copies(book):
 
 
 def test_author_full_name(author):
-    assert author.full_name == "George Orwell"
+    assert author.full_name == "Elsaeed Ahmed"
 
 
 def test_borrowing_transaction_str_and_penalty(user, book):
