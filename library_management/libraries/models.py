@@ -8,42 +8,49 @@ from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
 
 
 class Library(models.Model):
-    name = models.CharField(max_length=200)
-    address = models.TextField()
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    phone = models.CharField(max_length=20, blank=True)
-    email = models.EmailField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(_("Library Name"), max_length=200)
+    address = models.TextField(_("Address"))
+    latitude = models.DecimalField(_("Latitude"), max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(_("Longitude"), max_digits=9, decimal_places=6)
+    phone = models.CharField(_("Phone Number"), max_length=20, blank=True)
+    email = models.EmailField(_("Email"), blank=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
 
     class Meta:
-        verbose_name_plural = "Libraries"
+        verbose_name = _("Library")
+        verbose_name_plural = _("Libraries")
 
     def __str__(self):
         return self.name
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
+    name = models.CharField(_("Category Name"), max_length=100, unique=True)
+    description = models.TextField(_("Description"), blank=True)
 
     class Meta:
-        verbose_name_plural = "Categories"
+        verbose_name = _("Category")
+        verbose_name_plural = _("Categories")
 
     def __str__(self):
         return self.name
 
 
 class Author(models.Model):
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    bio = models.TextField(blank=True)
-    birth_date = models.DateField(null=True, blank=True)
+    first_name = models.CharField(_("First Name"), max_length=100)
+    last_name = models.CharField(_("Last Name"), max_length=100)
+    bio = models.TextField(_("Biography"), blank=True)
+    birth_date = models.DateField(_("Birth Date"), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("Author")
+        verbose_name_plural = _("Authors")
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -54,26 +61,37 @@ class Author(models.Model):
 
 
 class Book(models.Model):
-    title = models.CharField(max_length=300)
-    isbn = models.CharField(max_length=13, unique=True)
-    authors = models.ManyToManyField(Author, related_name="authored_books")
+    title = models.CharField(_("Title"), max_length=300)
+    isbn = models.CharField(_("ISBN"), max_length=13, unique=True)
+    authors = models.ManyToManyField(
+        Author,
+        verbose_name=_("Authors"),
+        related_name="authored_books",
+    )
     category = models.ForeignKey(
         Category,
+        verbose_name=_("Category"),
         on_delete=models.CASCADE,
         related_name="category_books",
     )
     library = models.ForeignKey(
         Library,
+        verbose_name=_("Library"),
         on_delete=models.CASCADE,
         related_name="library_books",
     )
     publication_year = models.IntegerField(
+        _("Publication Year"),
         validators=[MinValueValidator(1000), MaxValueValidator(timezone.now().year)],
     )
-    total_copies = models.PositiveIntegerField(default=1)
-    available_copies = models.PositiveIntegerField(default=1)
-    description = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    total_copies = models.PositiveIntegerField(_("Total Copies"), default=1)
+    available_copies = models.PositiveIntegerField(_("Available Copies"), default=1)
+    description = models.TextField(_("Description"), blank=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Book")
+        verbose_name_plural = _("Books")
 
     def __str__(self):
         return self.title
@@ -127,25 +145,47 @@ class Book(models.Model):
 
 class BorrowingTransaction(models.Model):
     STATUS_CHOICES = [
-        ("active", "Active"),
-        ("returned", "Returned"),
-        ("overdue", "Overdue"),
+        ("active", _("Active")),
+        ("returned", _("Returned")),
+        ("overdue", _("Overdue")),
     ]
 
     user = models.ForeignKey(
         User,
+        verbose_name=_("User"),
         on_delete=models.CASCADE,
         related_name="borrowing_transactions_user",
     )
-    books = models.ManyToManyField(Book, related_name="borrowing_transactions_books")
-    borrow_date = models.DateTimeField(auto_now_add=True)
-    expected_return_date = models.DateField()
-    actual_return_date = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="active")
-    penalty_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    books = models.ManyToManyField(
+        Book,
+        verbose_name=_("Books"),
+        related_name="borrowing_transactions_books",
+    )
+    borrow_date = models.DateTimeField(_("Borrow Date"), auto_now_add=True)
+    expected_return_date = models.DateField(_("Expected Return Date"))
+    actual_return_date = models.DateTimeField(
+        _("Actual Return Date"),
+        null=True,
+        blank=True,
+    )
+    status = models.CharField(
+        _("Status"),
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="active",
+    )
+    penalty_amount = models.DecimalField(
+        _("Penalty Amount"),
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+    )
 
-    # Constants
     MAX_BORROW_LIMIT = 3
+
+    class Meta:
+        verbose_name = _("Borrowing Transaction")
+        verbose_name_plural = _("Borrowing Transactions")
 
     def __str__(self):
         return f"{self.user.email} - {self.borrow_date.date()}"
@@ -168,7 +208,6 @@ class BorrowingTransaction(models.Model):
                 msg = "Return date must be in the future"
                 raise ValidationError(msg)
 
-    # Properties - Keep these as they're data access, not business logic
     @property
     def is_overdue(self):
         if self.status == "returned":
@@ -185,14 +224,12 @@ class BorrowingTransaction(models.Model):
     def book_count(self):
         return self.books.count()
 
-    # Utility methods - Keep these as they're pure calculations
     def calculate_penalty(self, daily_penalty=1.00):
         """Calculate penalty amount (doesn't save)"""
         if self.is_overdue:
             return self.days_overdue * daily_penalty
         return 0.00
 
-    # Class methods for validation - Keep these as they're business rules
     @classmethod
     def validate_user_borrowing_limit(cls, user, new_books_count=0):
         """Check if user can borrow more books"""
